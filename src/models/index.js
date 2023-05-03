@@ -3,5 +3,5 @@ const role = require('./role');
 
 module.exports = {
     user,
-    role
-}
+    role,
+};

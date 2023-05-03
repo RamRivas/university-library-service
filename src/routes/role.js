@@ -1,9 +1,9 @@
 const express = require('express');
-const {createRole} = require('../models/role');
+const { createRole } = require('../models/role');
 const router = express.Router();
 
 // Create user
-router.post("/roles", async (req, res) => {
+router.post('/roles', async (req, res) => {
     try {
         const result = await createRole(req.body);
         res.status(200).json(result);

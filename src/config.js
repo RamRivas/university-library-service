@@ -9,7 +9,7 @@ const config = {
     PORT,
     CTX,
     SALT_ROUNDS,
-    URI
+    URI,
 };
 
 for (const element in config)
