@@ -8,7 +8,7 @@ const router = express.Router();
 // Create user
 router.post('/users', async (req, res) => {
     try {
-        req.body.role = Role.find({ name: req.body.role });
+        req.body.role = await Role.findOne({ name: req.body.role }).exec();
         const result = await createUser(req.body);
         res.status(200).json(result);
     } catch (error) {
