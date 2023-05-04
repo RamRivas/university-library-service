@@ -11,13 +11,10 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-<<<<<<< HEAD
-=======
     role: {
         type: Object,
         required: true
     }
->>>>>>> models
 });
 
 const User = mongoose.model('User', userSchema);
