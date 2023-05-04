@@ -1,9 +1,11 @@
 const express = require('express');
+const router = express.Router();
 const {
-    user: { createUser },
+    user: { createUser, login },
     role: { Role },
 } = require('../models');
-const router = express.Router();
+const { Token } = require('../models/token');
+const { authenticateAccessToken } = require('../middlewares/token');
 
 // Create user
 router.post('/users', async (req, res) => {
@@ -25,5 +27,19 @@ router.post("/login", async (req, res) => {
         res.status(400).send(`${error.message}`);
     }
 });
+
+// Logout
+router.delete("/logout", authenticateAccessToken, async (req, res) => {
+    try {
+        const result = await Token.deleteOne({token: req.body.token});
+        if(result.deletedCount === 0) {
+            res.status(400).send('This session was currently off');    
+        } else {
+            res.status(200).send('The user was loged out successfully');
+        }
+    } catch (error) {
+        res.status(400).send(`${error.message}`);
+    }
+} )
 
 module.exports = router;

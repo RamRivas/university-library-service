@@ -3,13 +3,15 @@ const assert = require('assert');
 
 dotenv.config();
 
-const { PORT, CTX, SALT_ROUNDS, URI } = process.env;
+const { PORT, CTX, SALT_ROUNDS, URI, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } = process.env;
 
 const config = {
     PORT,
     CTX,
     SALT_ROUNDS,
     URI,
+    ACCESS_TOKEN_SECRET,
+    REFRESH_TOKEN_SECRET
 };
 
 for (const element in config)

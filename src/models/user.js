@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const { SALT_ROUNDS } = require('../config');
+const { SALT_ROUNDS, CTX } = require('../config');
+const { signUser, Token } = require('./token');
 
 const userSchema = mongoose.Schema({
     name: {
@@ -31,7 +32,7 @@ const createUser = async ({ name, pwd, role }) => {
         return result;
     } catch (error) {
         throw new Error(
-            `Error ${error.message}. Path ${__dirname}${__filename}`
+            `${error.message}. Path ${__dirname}${__filename}`
         );
     }
 };
@@ -48,10 +49,18 @@ const login = async ({ name, pwd }) => {
             return 'Incorrect Password';
         };
 
-        return 'You are now logged in';
+        const activeSessions = await Token.find({ user: user }).exec();
+        
+        if(activeSessions.length > 0) return 'This user already has an open session';
+
+        return {
+            result: 'You are now logged in',
+            tokens: await signUser(user)
+        };
     } catch (error) {
+        CTX === 'dev' && console.log(error);
         throw new Error(
-            `Error ${error.message}. Path ${__dirname}${__filename}`
+            `${error.message}. ${ CTX === 'dev' ? `Path ${__dirname}${__filename}` : ``}`
         );
     }
 };
