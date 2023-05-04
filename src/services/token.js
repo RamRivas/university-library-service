@@ -6,9 +6,9 @@ const verifyToken = (token, secret, req, res, next) => {
         next();
     } catch (error) {
         return res.sendStatus(403);
-    };
+    }
 };
 
 module.exports = {
-    verifyToken
+    verifyToken,
 };

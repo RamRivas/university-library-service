@@ -5,7 +5,9 @@ const {
     role: { Role },
 } = require('../models');
 const { Token } = require('../models/token');
-const { authenticateAccessToken } = require('../middlewares/token');
+const {
+    token: { authenticateAccessToken },
+} = require('../middlewares');
 
 // Create user
 router.post('/users', async (req, res) => {
@@ -19,7 +21,7 @@ router.post('/users', async (req, res) => {
 });
 
 // Login
-router.post("/login", async (req, res) => {
+router.post('/login', async (req, res) => {
     try {
         const result = await login(req.body);
         res.status(200).json(result);
@@ -29,17 +31,17 @@ router.post("/login", async (req, res) => {
 });
 
 // Logout
-router.delete("/logout", authenticateAccessToken, async (req, res) => {
+router.delete('/logout', authenticateAccessToken, async (req, res) => {
     try {
-        const result = await Token.deleteOne({token: req.body.token});
-        if(result.deletedCount === 0) {
-            res.status(400).send('This session was currently off');    
+        const result = await Token.deleteOne({ token: req.body.token });
+        if (result.deletedCount === 0) {
+            res.status(400).send('This session was currently off');
         } else {
             res.status(200).send('The user was loged out successfully');
         }
     } catch (error) {
         res.status(400).send(`${error.message}`);
     }
-} )
+});
 
 module.exports = router;

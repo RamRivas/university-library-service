@@ -14,8 +14,8 @@ const userSchema = mongoose.Schema({
     },
     role: {
         type: Object,
-        required: true
-    }
+        required: true,
+    },
 });
 
 const User = mongoose.model('User', userSchema);
@@ -31,9 +31,7 @@ const createUser = async ({ name, pwd, role }) => {
         const result = await user.save();
         return result;
     } catch (error) {
-        throw new Error(
-            `${error.message}. Path ${__dirname}${__filename}`
-        );
+        throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
     }
 };
 
@@ -45,22 +43,25 @@ const login = async ({ name, pwd }) => {
         }
 
         const correctPwd = await bcrypt.compare(pwd, user.pwd);
-        if(!correctPwd) {
+        if (!correctPwd) {
             return 'Incorrect Password';
-        };
+        }
 
         const activeSessions = await Token.find({ user: user }).exec();
-        
-        if(activeSessions.length > 0) return 'This user already has an open session';
+
+        if (activeSessions.length > 0)
+            return 'This user already has an open session';
 
         return {
             result: 'You are now logged in',
-            tokens: await signUser(user)
+            tokens: await signUser(user),
         };
     } catch (error) {
         CTX === 'dev' && console.log(error);
         throw new Error(
-            `${error.message}. ${ CTX === 'dev' ? `Path ${__dirname}${__filename}` : ``}`
+            `${error.message}. ${
+                CTX === 'dev' ? `Path ${__dirname}${__filename}` : ``
+            }`
         );
     }
 };
@@ -69,5 +70,5 @@ module.exports = {
     User,
     userSchema,
     createUser,
-    login
+    login,
 };
