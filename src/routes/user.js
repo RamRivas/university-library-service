@@ -10,7 +10,7 @@ const {
 } = require('../middlewares');
 
 // Create user
-router.post('/users', async (req, res) => {
+router.post('/users', authenticateAccessToken, async (req, res) => {
     try {
         req.body.role = await Role.findOne({ name: req.body.role }).exec();
         const result = await createUser(req.body);
