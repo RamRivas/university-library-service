@@ -21,9 +21,10 @@ const userSchema = mongoose.Schema({
         required: true,
     },
     role: {
-        type: Object,
-        required: true,
-    },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+        required: true
+    }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -35,7 +36,7 @@ const createUser = async ({ firstName, lastName, email, pwd, role }) => {
             lastName,
             email,
             pwd: await bcrypt.hash(pwd, parseInt(SALT_ROUNDS)),
-            role,
+            role: role._id,
         });
 
         const result = await user.save();
