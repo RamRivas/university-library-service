@@ -1,16 +1,18 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, CTX } = require('../config');
+const { User } = require('./user');
 
 const tokenSchema = mongoose.Schema({
     token: {
         type: String,
         required: true
     },
-    user: {
-        type: Object,
-        required: true
-    }
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
 });
 
 const Token = mongoose.model('Token', tokenSchema);
@@ -21,7 +23,7 @@ const signUser = async user => {
         const refreshToken = await generateRefreshToken(user);
         const token = new Token({
             token: refreshToken,
-            user
+            userId: user._id,
         });
 
         await token.save();
