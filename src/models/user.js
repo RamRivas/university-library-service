@@ -4,7 +4,15 @@ const { SALT_ROUNDS, CTX } = require('../config');
 const { signUser, Token } = require('./token');
 
 const userSchema = mongoose.Schema({
-    name: {
+    firstName: {
+        type: String,
+        required: true,
+    },
+    lastName: {
+        type: String,
+        required: true,
+    },
+    email: {
         type: String,
         required: true,
     },
@@ -20,10 +28,12 @@ const userSchema = mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-const createUser = async ({ name, pwd, role }) => {
+const createUser = async ({ firstName, lastName, email, pwd, role }) => {
     try {
         const user = new User({
-            name,
+            firstName,
+            lastName,
+            email,
             pwd: await bcrypt.hash(pwd, parseInt(SALT_ROUNDS)),
             role,
         });
@@ -35,9 +45,9 @@ const createUser = async ({ name, pwd, role }) => {
     }
 };
 
-const login = async ({ name, pwd }) => {
+const login = async ({ email, pwd }) => {
     try {
-        const user = await User.findOne({ name }).exec();
+        const user = await User.findOne({ email }).exec();
         if (!user) {
             return 'User not found';
         }
