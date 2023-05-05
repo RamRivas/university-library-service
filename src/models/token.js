@@ -7,8 +7,9 @@ const tokenSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    user: {
-        type: Object,
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true,
     },
 });
@@ -21,7 +22,7 @@ const signUser = async (user) => {
         const refreshToken = await generateRefreshToken(user);
         const token = new Token({
             token: refreshToken,
-            user,
+            userId: user._id,
         });
 
         await token.save();
