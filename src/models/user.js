@@ -13,7 +13,8 @@ const userSchema = mongoose.Schema({
         required: true,
     },
     role: {
-        type: Object,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
         required: true
     }
 });
@@ -25,7 +26,7 @@ const createUser = async ({ name, pwd, role }) => {
         const user = new User({
             name,
             pwd: await bcrypt.hash(pwd, parseInt(SALT_ROUNDS)),
-            role,
+            role: role._id,
         });
 
         const result = await user.save();
