@@ -102,13 +102,13 @@ const completeLend = async ({ lendId, lendDate, deliverDate }) => {
     }
 };
 
-const deliverLend = async ({ lendId, delivered }) => {
+const deliverLend = async ({ lendId }) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
         const lendingCart = await LendingCart.findById(lendId).exec();
 
-        lendingCart.delivered = delivered;
+        lendingCart.delivered = true;
 
         const result = {
             result: await lendingCart.save({session}),
