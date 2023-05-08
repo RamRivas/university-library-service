@@ -1,4 +1,4 @@
-const { lendingCart: { createLendingCart, completeLend, updateLend } } = require('../models');
+const { lendingCart: { createLendingCart, completeLend, updateLend, deliverLend } } = require('../models');
 
 const lendingCartUpdateCommands = [
     async body => {
@@ -7,6 +7,9 @@ const lendingCartUpdateCommands = [
     async body => {
         return await updateLend(body);
     }, //1 Change books ammounts
+    async body => {
+        return await deliverLend(body);
+    }
 ];
 
 // Create LendingCart
