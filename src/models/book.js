@@ -135,5 +135,6 @@ module.exports = {
     Book,
     createBook,
     stockDecrease,
-    stockMutationInLendingCart
+    stockMutationInLendingCart,
+    stockIncrease
 };
