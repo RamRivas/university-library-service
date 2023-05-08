@@ -23,8 +23,8 @@ const userSchema = mongoose.Schema({
     role: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Role',
-        required: true
-    }
+        required: true,
+    },
 });
 
 const User = mongoose.model('User', userSchema);
@@ -49,16 +49,17 @@ const createUser = async ({ firstName, lastName, email, pwd, role }) => {
 const login = async ({ email, pwd }) => {
     try {
         const user = await User.findOne({ email }).exec();
+        const { _id, pwd: pwdInDb } = user;
         if (!user) {
             return 'User not found';
         }
 
-        const correctPwd = await bcrypt.compare(pwd, user.pwd);
+        const correctPwd = await bcrypt.compare(pwd, pwdInDb);
         if (!correctPwd) {
             return 'Incorrect Password';
         }
 
-        const activeSessions = await Token.find({ user: user }).exec();
+        const activeSessions = await Token.find({ userId: _id }).exec();
 
         if (activeSessions.length > 0)
             return 'This user already has an open session';

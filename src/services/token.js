@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 const verifyToken = (token, secret, req, res, next) => {
     try {
-        req.user = jwt.verify(token, secret);
+        req.user = jwt.verify(token, secret).user;
         next();
     } catch (error) {
         return res.sendStatus(403);

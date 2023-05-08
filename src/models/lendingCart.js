@@ -1,69 +1,114 @@
 const mongoose = require('mongoose');
-const { stockDecrease } = require('./book');
+const { stockMutationInLendingCart} = require('./book');
 
 const lendingCartSchema = mongoose.Schema({
     creationDate: {
         type: Date,
-        required: true
+        required: true,
     },
-    user: {
-        type: Object,
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true,
     },
     books: {
-        type: [{
-            book: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Book',
-                required: true,
+        type: [
+            {
+                book: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Book',
+                    required: true,
+                },
+                amount: {
+                    type: Number,
+                    required: true,
+                },
             },
-            amount: {
-                type: Number,
-                required: true
-            },
-        }],
+        ],
         required: true,
-        validate: [(val) => val.length > 0, 'The lending cart must have minimum one book']
+        validate: [
+            (val) => val.length > 0,
+            'The lending cart must have minimum one book',
+        ],
     },
     lendDate: Date,
     deliverDate: Date,
     delivered: {
         type: Boolean,
-        default: false
+        default: false,
     },
 });
 
 const LendingCart = mongoose.model('LendingCart', lendingCartSchema);
 
-const createLendingCart = async ({creationDate, user, books}) => {
+const createLendingCart = async ({ creationDate, userId, books }) => {
     try {
         const lendingCart = new LendingCart({
             creationDate,
-            user,
-            books
+            userId,
+            books,
         });
 
         return await lendingCart.save();
     } catch (error) {
         throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
-    };
+    }
 };
 
-const completeLend = async ({ lendId, lendDate, deliverDate }) => {
+const updateLend = async ({lendId, deliverDate, books}) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-        const lendingCart = await LendingCart.findById(lendId).exec();
-        return {
-            result: await lendingCart.save({ lendDate, deliverDate }).exec(),
-            booksAffected: await stockDecrease(lendingCart)
-        };
+        const lendingCart = await LendingCart.findById(lendId).session(session);
+        const { books: prevBooks } = lendingCart;
+
+        lendingCart.deliverDate = deliverDate;
+        lendingCart.books = books;
+
+        const result = {
+            result: await lendingCart.save({session}),
+            booksAffected: await stockMutationInLendingCart({books}, session, prevBooks)
+        }
+        await session.commitTransaction();
+
+        return result;
     } catch (error) {
+        await session.abortTransaction();
         throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
-    };
+    }
+}
+
+const completeLend = async ({ lendId, lendDate, deliverDate }) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        let lendingCart = await LendingCart.findById(lendId).exec();
+        
+        lendingCart.lendDate = lendDate,
+        lendingCart.deliverDate = deliverDate;
+
+        const result = {
+            result: await lendingCart.save({session}),
+            booksAffected: await stockMutationInLendingCart(lendingCart, session),
+        }
+        
+        await session.commitTransaction();
+
+        // await session.endSession();
+        return result;
+    } catch (error) {
+        await session.abortTransaction();
+        // await session.endSession();
+        throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
+    } finally {
+        
+    }
 };
 
 module.exports = {
     lendingCartSchema,
     LendingCart,
     createLendingCart,
-    completeLend
-}
+    completeLend,
+    updateLend
+};

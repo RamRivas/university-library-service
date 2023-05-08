@@ -8,6 +8,7 @@ const { Token } = require('../models/token');
 const {
     token: { authenticateAccessToken },
 } = require('../middlewares');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 // Create user
 router.post('/users', authenticateAccessToken, async (req, res) => {
@@ -33,11 +34,13 @@ router.post('/login', async (req, res) => {
 // Logout
 router.delete('/logout', authenticateAccessToken, async (req, res) => {
     try {
-        const result = await Token.deleteOne({ token: req.body.token });
+        const { token } = req.body;
+        const { user: { _id } } = req;
+        const result = await Token.deleteOne({ token: token, userId: new ObjectId(_id) });
         if (result.deletedCount === 0) {
             res.status(400).send('This session was currently off');
         } else {
-            res.status(200).send('The user was loged out successfully');
+            res.status(200).send('The user was logged out successfully');
         }
     } catch (error) {
         res.status(400).send(`${error.message}`);

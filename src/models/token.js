@@ -42,7 +42,7 @@ const signUser = async (user) => {
 
 const generateAccessToken = async (user) => {
     try {
-        return jwt.sign({ user }, ACCESS_TOKEN_SECRET, { expiresIn: '60d' });
+        return jwt.sign({ user }, ACCESS_TOKEN_SECRET, { expiresIn: '60m' });
     } catch (error) {
         CTX === 'dev' && console.log(error);
         throw new Error(

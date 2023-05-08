@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { CTX } = require('../config');
+const { Types: {ObjectId} } = mongoose;
 
 const bookSchema = mongoose.Schema({
     title: {
@@ -20,7 +22,7 @@ const bookSchema = mongoose.Schema({
     stock: {
         type: Number,
         required: true,
-        validation: [(val) => val < 0, 'There are no available copies']
+        validation: [(val) => val < 0, 'There are no available copies'],
     },
 });
 
@@ -43,22 +45,95 @@ const createBook = async ({ title, author, publishedYear, genre, stock }) => {
     }
 };
 
-const stockDecrease = async ({books}) => {
+const stockDecrease = async ({ books }, session) => {
     try {
         let counter = 0;
-        for(const element in books){
-            const currentBook = await Book.updateOne({ _id: element.book._id },{ stock: stock - element.amount }).exec();
-            if(currentBook.ok === 1) counter ++;
-        };
+        for (const element of books) {
+            const { book, amount } = element;
+
+            const currentBook = await Book.findById(book);
+            currentBook.stock = currentBook.stock - amount;
+            await currentBook.save({session});
+            counter++;
+        }
         return counter;
+    } catch (error) {
+        CTX === 'dev' && console.log(error);
+        throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
+    }
+};
+
+const stockIncrease = async ({ books }, session) => {
+    try {
+        let counter = 0;
+        for (const element of books) {
+            const { book, amount } = element;
+
+            const currentBook = await Book.findById(book);
+            currentBook.stock = currentBook.stock + amount;
+
+            await currentBook.save({session});
+            counter++;
+        }
+        return counter;
+    } catch (error) {
+        CTX === 'dev' && console.log(error);
+        throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
+    }
+};
+
+const stockMutationInLendingCart = async ({books}, session, prevBooks = undefined) => {
+    try {
+        if(!prevBooks){
+            return await stockDecrease({books}, session);
+        } else {
+            let counter = 0;
+
+            const intersection = books.filter(x => prevBooks.find(y => y.book.equals(x.book)));
+
+            for (const element in intersection) {
+                const { amount, book } = intersection[element];
+
+                const currentPrevBook = prevBooks.find( ({ book: prevBook }) => prevBook.equals(book));
+                const { amount: prevAmount } = currentPrevBook;
+
+                let diff = undefined;
+    
+                if(amount < prevAmount){
+                    diff = prevAmount - amount;
+                }
+                else if(amount > prevAmount){
+                    diff = amount - prevAmount;
+                };
+
+                if(diff){
+                    const currentBook = await Book.findById(book);
+                    currentBook.stock = amount < prevAmount ? currentBook.stock + diff : currentBook.stock - diff;
+
+                    await currentBook.save({session});
+                    counter++;
+                }   
+            }
+
+            const leftDiference = books.filter(x => !prevBooks.find(y => y.book.equals(x.book)));
+
+            if(leftDiference.length > 0) counter += await stockDecrease({ books: [...leftDiference] }, session);
+
+            const rightDiference = prevBooks.filter(x => !books.find(y => x.book.equals(y.book)));
+
+            if(rightDiference.length > 0) counter += await stockIncrease({ books: [...rightDiference] }, session);
+
+            return counter;
+        }
     } catch (error) {
         throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
     }
-}
+};
 
 module.exports = {
     bookSchema,
     Book,
     createBook,
-    stockDecrease
+    stockDecrease,
+    stockMutationInLendingCart
 };
