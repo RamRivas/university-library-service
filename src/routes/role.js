@@ -1,15 +1,9 @@
 const express = require('express');
-const { createRole } = require('../models/role');
+const { token: {authenticateAccessToken} } = require('../middlewares');
+const { role: { postRoles } } = require('../controllers');
 const router = express.Router();
 
-// Create user
-router.post('/roles', async (req, res) => {
-    try {
-        const result = await createRole(req.body);
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(400).send(`${error.message}`);
-    }
-});
+// Create role
+router.post('/roles', authenticateAccessToken, postRoles);
 
 module.exports = router;

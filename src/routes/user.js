@@ -1,50 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const {
-    user: { createUser, login },
-    role: { Role },
-} = require('../models');
-const { Token } = require('../models/token');
-const {
     token: { authenticateAccessToken },
 } = require('../middlewares');
-const ObjectId = require('mongoose').Types.ObjectId;
+const { user: { deleteLogout, postLogin, postUsers } } = require('../controllers');
 
 // Create user
-router.post('/users', authenticateAccessToken, async (req, res) => {
-    try {
-        req.body.role = await Role.findOne({ name: req.body.role }).exec();
-        const result = await createUser(req.body);
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(400).send(`${error.message}`);
-    }
-});
+router.post('/users', authenticateAccessToken, postUsers);
 
 // Login
-router.post('/login', async (req, res) => {
-    try {
-        const result = await login(req.body);
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(400).send(`${error.message}`);
-    }
-});
+router.post('/login', postLogin);
 
 // Logout
-router.delete('/logout', authenticateAccessToken, async (req, res) => {
-    try {
-        const { token } = req.body;
-        const { user: { _id } } = req;
-        const result = await Token.deleteOne({ token: token, userId: new ObjectId(_id) });
-        if (result.deletedCount === 0) {
-            res.status(400).send('This session was currently off');
-        } else {
-            res.status(200).send('The user was logged out successfully');
-        }
-    } catch (error) {
-        res.status(400).send(`${error.message}`);
-    }
-});
+router.delete('/logout', authenticateAccessToken, deleteLogout);
 
 module.exports = router;
