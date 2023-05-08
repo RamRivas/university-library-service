@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { stockMutationInLendingCart} = require('./book');
+const { stockMutationInLendingCart, stockIncrease} = require('./book');
 
 const lendingCartSchema = mongoose.Schema({
     creationDate: {
@@ -82,7 +82,7 @@ const completeLend = async ({ lendId, lendDate, deliverDate }) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-        let lendingCart = await LendingCart.findById(lendId).exec();
+        const lendingCart = await LendingCart.findById(lendId).exec();
         
         lendingCart.lendDate = lendDate,
         lendingCart.deliverDate = deliverDate;
@@ -94,21 +94,42 @@ const completeLend = async ({ lendId, lendDate, deliverDate }) => {
         
         await session.commitTransaction();
 
-        // await session.endSession();
         return result;
     } catch (error) {
         await session.abortTransaction();
-        // await session.endSession();
-        throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
-    } finally {
         
+        throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
     }
 };
+
+const deliverLend = async ({ lendId, delivered }) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const lendingCart = await LendingCart.findById(lendId).exec();
+
+        lendingCart.delivered = delivered;
+
+        const result = {
+            result: await lendingCart.save({session}),
+            booksAffected: await stockIncrease(lendingCart, session)
+        };
+
+        await session.commitTransaction();
+
+        return result;
+    } catch (error) {
+        await session.abortTransaction();
+        
+        throw new Error(`${error.message}. Path ${__dirname}${__filename}`);
+    }
+}
 
 module.exports = {
     lendingCartSchema,
     LendingCart,
     createLendingCart,
     completeLend,
-    updateLend
+    updateLend,
+    deliverLend
 };
