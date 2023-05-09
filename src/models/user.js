@@ -49,10 +49,10 @@ const createUser = async ({ firstName, lastName, email, pwd, role }) => {
 const login = async ({ email, pwd }) => {
     try {
         const user = await User.findOne({ email }).exec();
-        const { _id, pwd: pwdInDb } = user;
         if (!user) {
             return 'User not found';
         }
+        const { _id, pwd: pwdInDb } = user;
 
         const correctPwd = await bcrypt.compare(pwd, pwdInDb);
         if (!correctPwd) {

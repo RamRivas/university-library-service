@@ -3,12 +3,16 @@ const { CTX, PORT, URI } = require('./config');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const routes = require('./routes');
+const cors = require('cors');
 
 const main = async () => {
     try {
         const app = express();
         app.use(express.json());
 
+        //CORS
+        app.use(cors());
+        
         //Middlewares
         for (const router in routes) {
             app.use('/api', routes[router]);
