@@ -37,4 +37,5 @@ module.exports = {
     Role,
     roleSchema,
     createRole,
+    getAllRoles
 };
