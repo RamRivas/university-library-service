@@ -23,6 +23,16 @@ const createRole = async ({ name }) => {
     }
 };
 
+const getAllRoles = async () => {
+    try {
+        const roles = await Role.find();
+
+        return roles;
+    } catch (error) {
+        throw new Error(`Error ${error.message}. Path ${__filename}`);
+    }
+}
+
 module.exports = {
     Role,
     roleSchema,
