@@ -55,19 +55,16 @@ const createLendingCart = async ({ creationDate, userId, books }) => {
     }
 };
 
-const updateLend = async ({lendId, deliverDate, books}) => {
+const updateLend = async ({lendId, books}) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
         const lendingCart = await LendingCart.findById(lendId).session(session);
-        const { books: prevBooks } = lendingCart;
 
-        lendingCart.deliverDate = deliverDate;
         lendingCart.books = books;
 
         const result = {
-            result: await lendingCart.save({session}),
-            booksAffected: await stockMutationInLendingCart({books}, session, prevBooks)
+            result: await lendingCart.save({session})
         }
         await session.commitTransaction();
 
