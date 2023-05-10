@@ -9,8 +9,10 @@ const { REFRESH_TOKEN_SECRET } = require('../config');
 // Ger new Access Token
 exports.postToken = async (req, res) => {
     try {
+        console.log(req.body);
         const refreshToken = req.body.token;
         if (!refreshToken) return res.sendStatus(401);
+        console.log(await Token.findOne({ token: refreshToken }).exec());
         if (!await Token.findOne({ token: refreshToken }).exec())
             return res.sendStatus(403);
         verifyToken(refreshToken, REFRESH_TOKEN_SECRET, req, res, async () => {
