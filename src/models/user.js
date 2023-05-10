@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { SALT_ROUNDS, CTX } = require('../config');
 const { signUser, Token } = require('./token');
+const { Role } = require('./role');
 
 const userSchema = mongoose.Schema({
     firstName: {
@@ -52,21 +53,28 @@ const login = async ({ email, pwd }) => {
         if (!user) {
             return 'User not found';
         }
-        const { _id, pwd: pwdInDb } = user;
+        const { _id, pwd: pwdInDb, role } = user;
 
         const correctPwd = await bcrypt.compare(pwd, pwdInDb);
         if (!correctPwd) {
-            return 'Incorrect Password';
+            return {
+                message: 'Incorrect Password',
+                icon: 'error'
+            };
         }
 
         const activeSessions = await Token.find({ userId: _id }).exec();
 
         if (activeSessions.length > 0)
-            return 'This user already has an open session';
+            return {
+                message: 'This user already has an open session',
+                icon: 'warning'
+            };
 
         return {
             result: 'You are now logged in',
             tokens: await signUser(user),
+            role: await Role.findById(role)
         };
     } catch (error) {
         CTX === 'dev' && console.log(error);
@@ -78,9 +86,51 @@ const login = async ({ email, pwd }) => {
     }
 };
 
+const logoutNoAuth = async ({email, pwd}) => {
+    try {
+        // console.log(email);
+        const user = await User.findOne({ email }).exec();
+        if(!user) return {
+            text: 'User not found',
+            icon: 'warning'
+        };
+
+        const { _id, pwd: pwdInDb } = user;
+
+        const correctPwd = await bcrypt.compare(pwd, pwdInDb);
+
+        if (!correctPwd) {
+            return {
+                text: 'Incorrect Password',
+                icon: 'error'
+            };
+        }
+
+        const result = await Token.deleteOne({ userId: _id });
+
+        if(result.deletedCount === 0) return {
+            text: 'This session was currently off',
+            icon: 'warning'
+        };
+
+        return {
+            text: 'The user was logged out successfully, try login again',
+            icon: 'success'
+        };
+    } catch (error) {
+        CTX === 'dev' && console.log(error);
+        throw new Error(
+            `${error.message}. ${
+                CTX === 'dev' ? `Path ${__dirname}${__filename}` : ``
+            }`
+        );
+    }
+}
+
 module.exports = {
     User,
     userSchema,
     createUser,
     login,
+    logoutNoAuth
 };

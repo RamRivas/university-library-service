@@ -11,7 +11,7 @@ exports.postToken = async (req, res) => {
     try {
         const refreshToken = req.body.token;
         if (!refreshToken) return res.sendStatus(401);
-        if (!Token.findOne({ token: refreshToken }).exec())
+        if (!await Token.findOne({ token: refreshToken }).exec())
             return res.sendStatus(403);
         verifyToken(refreshToken, REFRESH_TOKEN_SECRET, req, res, async () => {
             const accessToken = await generateAccessToken(req.user);

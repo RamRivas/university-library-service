@@ -1,8 +1,10 @@
+const { CTX } = require('../config');
 const {
     user: { createUser, login },
     role: { Role },
 } = require('../models');
 const { Token } = require('../models/token');
+const { logoutNoAuth } = require('../models/user');
 const ObjectId = require('mongoose').Types.ObjectId;
 
 // Create user
@@ -33,10 +35,21 @@ exports.deleteLogout = async (req, res) => {
         const { user: { _id } } = req;
         const result = await Token.deleteOne({ token: token, userId: new ObjectId(_id) });
         if (result.deletedCount === 0) {
-            res.status(400).send('This session was currently off');
+            res.status(200).send('This session was currently off');
         } else {
             res.status(200).send('The user was logged out successfully');
         }
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(`${error.message}`);
+    }
+};
+
+// Logout No Auth
+exports.deleteLogoutNoAuth = async (req, res) => {
+    try {
+        const result = await logoutNoAuth(req.body);
+        res.status(200).json(result);
     } catch (error) {
         res.status(400).send(`${error.message}`);
     }
